@@ -25,7 +25,8 @@ SPDX-License-Identifier: MIT
 - [ ] The complete Skill package follows the Agent Skills specification and loads through OpenHands.
 - [ ] Tools, network use, data access, platforms, scripts, references, and assets are declared accurately.
 - [ ] Public source, fixtures, outputs, and logs contain synthetic data only.
-- [ ] Script and policy changes include focused deterministic tests.
+- [ ] Script changes test success, malformed input, boundary enforcement, and aggregate-output behavior.
+- [ ] Policy changes include focused deterministic tests.
 
 
 ### :white_check_mark: Testing

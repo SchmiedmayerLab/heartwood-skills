@@ -37,7 +37,8 @@ Heartwood owns acquisition, installation, runtime policy, interface behavior, an
 - Add tests for success, malformed input, boundary enforcement, and aggregate-output behavior when changing scripts.
 - Keep catalog builds deterministic and immutable.
 - Keep durable user, deployment, and architecture documentation in the Heartwood repository rather than creating a second documentation tree here.
-- Attribute Heartwood Skills only to the Schmiedmayer Lab at Stanford University.
+- Describe Heartwood Skills only as a Schmiedmayer Lab at Stanford University project; do not add legacy organizational attributions.
+- Use Heartwood's legal file notice consistently: `Stanford University and the project authors (see CONTRIBUTORS.md)`.
 
 ## Pull Requests
 
