@@ -1,9 +1,12 @@
+#
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
+#
 
+# Default owner for repository and policy changes.
 * @PSchmiedmayer
 
 /skills/ @PSchmiedmayer

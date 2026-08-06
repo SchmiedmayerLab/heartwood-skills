@@ -1,8 +1,10 @@
+#
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
+#
 
 name: Build Catalog Candidate
 
@@ -19,10 +21,15 @@ permissions:
   id-token: write
   attestations: write
 
+concurrency:
+  group: catalog-candidate-${{ inputs.revision }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build and Attest Catalog Candidate
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Require a full commit revision
         env:
@@ -42,17 +49,22 @@ jobs:
         uses: astral-sh/setup-uv@v9.0.0
         with:
           enable-cache: true
+      - name: Install the pinned Python toolchain
+        run: uv python install
       - name: Install locked dependencies
         run: uv sync --locked
-      - name: Validate and build catalog targets
+      - name: Validate and build catalog targets twice
         env:
           REVISION: ${{ inputs.revision }}
         run: |
           test "$(git rev-parse HEAD)" = "${REVISION}"
           git merge-base --is-ancestor "${REVISION}" origin/main
           uv run heartwood-skill-catalog validate
-          uv run heartwood-skill-catalog build --revision "${REVISION}"
+          uv run heartwood-skill-catalog build --output dist/catalog-a --revision "${REVISION}"
+          uv run heartwood-skill-catalog build --output dist/catalog-b --revision "${REVISION}"
+          diff --recursive --brief dist/catalog-a dist/catalog-b
           uv run pytest
+          mv dist/catalog-a dist/catalog
       - name: Attest catalog candidate
         uses: actions/attest-build-provenance@v3
         with:

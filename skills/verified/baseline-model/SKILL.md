@@ -1,6 +1,8 @@
 ---
 # This source file is part of the Heartwood Skills open-source project
-# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
 # SPDX-License-Identifier: MIT
 name: baseline-model
 description: Fit a deterministic age-only logistic baseline over an OMOP condition-history outcome. Use to establish a reproducible baseline before evaluating more complex models.

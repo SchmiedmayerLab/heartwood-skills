@@ -1,0 +1,55 @@
+#
+# This source file is part of the Heartwood Skills open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Skill Problem
+description: Report incorrect or unsafe behavior in an existing curated Skill.
+title: "Replace this title with a concise description."
+labels: ["bug"]
+body:
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      description: Provide the Skill name and version, plus the immutable digest or Heartwood release when known.
+      placeholder: aggregate-export 1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed Behavior
+      description: Describe the incorrect result, instruction, boundary, or validation behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: Describe the outcome or safeguard you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Synthetic Reproduction
+      description: Provide minimal steps and synthetic inputs only.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Include the Heartwood version and platform when they affect the result.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/SchmiedmayerLab/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/SchmiedmayerLab/heartwood-skills/blob/main/CONTRIBUTING.md).  # yamllint disable-line rule:line-length
+      options:
+        - label: I agree to follow the Code of Conduct and Contributing Guidelines.
+          required: true

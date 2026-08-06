@@ -1,6 +1,8 @@
 ---
 # This source file is part of the Heartwood Skills open-source project
-# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
 # SPDX-License-Identifier: MIT
 name: omop-cohort-summary
 description: Define a target-condition cohort and report aggregate quality checks from OMOP-like tables. Use for a bounded first-pass cohort characterization.

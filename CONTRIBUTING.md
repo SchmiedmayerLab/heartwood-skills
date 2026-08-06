@@ -2,7 +2,7 @@
 
 This source file is part of the Heartwood Skills open-source project
 
-SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 
 SPDX-License-Identifier: MIT
 
@@ -13,16 +13,25 @@ SPDX-License-Identifier: MIT
 Heartwood Skills accepts focused additions and corrections to reusable biomedical-research workflows.
 Public source, tests, examples, and logs must contain synthetic data only.
 
-## Add or Update a Skill
+The canonical Skill format, policy, review, publication, and revocation guidance is maintained in the [Heartwood contribution documentation](https://schmiedmayerlab.github.io/heartwood/preview/contribute/).
+Read that guidance and [AGENTS.md](AGENTS.md) before changing a Skill or catalog tooling.
+
+## Prepare the Repository
+
+Heartwood Skills requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
+
+```bash
+uv sync --locked
+```
+
+## Make a Change
 
 - Follow the [Agent Skills specification](https://agentskills.io/specification).
-- Keep `SKILL.md` concise and place supporting material in `scripts/`, `references/`, or `assets/`.
-- Declare the complete Heartwood policy metadata used by the existing Skills.
+- Keep the complete package in one Skill directory, including `scripts/`, `references/`, and `assets/`.
+- Declare the complete Heartwood policy metadata and permissions used by the existing Skills.
 - Do not embed credentials, participant-level data, model weights, generated results, or private platform evidence.
-- Do not use OpenHands dynamic shell context or embedded MCP servers unless Heartwood first defines and tests a corresponding policy.
-- Treat bundled scripts and executable extensions as active content with explicit declarations.
-- When changing scripts, add deterministic tests for success, malformed input, boundary enforcement, and aggregate-output behavior.
-- Distinguish repository review from controlled-data approval.
+- Reuse the Agent Skills and OpenHands contracts rather than introducing another Skill format or loader.
+- Add deterministic tests for changed scripts, validation, policy, packaging, or revocation behavior.
 
 ## Validate the Change
 
@@ -37,16 +46,12 @@ uv run heartwood-skill-catalog build
 uv run pytest
 ```
 
-Generated catalog targets must be reproducible from the reviewed commit.
-Publication and revocation use signed TUF metadata and never rely on a mutable branch reference.
-
-To withdraw a published Skill, add its name, current complete-tree SHA-256 digest, and a concise reason to `revocations.toml`.
-Do not reuse a name-only revocation for replacement content.
-Catalog generation rejects unknown names and digest mismatches.
+`validate` and the tests can inspect working changes.
+`build` intentionally packages the exact checked-out Git revision, so commit the complete change locally before running it.
 
 ## Open a Pull Request
 
-Use the [Schmiedmayer Lab pull request template](https://github.com/SchmiedmayerLab/.github/blob/main/.github/pull_request_template.md).
-Link the tracked Heartwood issue, summarize user-visible behavior, and report focused verification without development narration.
+Use this repository's Skill-specific pull-request template.
+Link the tracked issue, summarize the workflow or catalog behavior, and report focused synthetic verification without development narration.
 
 By contributing, you agree that your contribution is licensed under the repository's [MIT License](LICENSE).

@@ -1,0 +1,19 @@
+#
+# This source file is part of the Heartwood Skills open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+blank_issues_enabled: false
+contact_links:
+  - name: Security Report
+    url: https://github.com/SchmiedmayerLab/heartwood-skills/security/advisories/new
+    about: Report suspected vulnerabilities privately.
+  - name: Heartwood Product Request
+    url: https://github.com/SchmiedmayerLab/heartwood/issues/new/choose
+    about: Request changes to Heartwood installation, runtime, policy, or interfaces.
+  - name: Discussions and Support
+    url: https://github.com/orgs/SchmiedmayerLab/discussions
+    about: Ask questions or discuss an early idea before proposing a Skill.

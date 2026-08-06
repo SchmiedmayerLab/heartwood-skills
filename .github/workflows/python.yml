@@ -1,8 +1,10 @@
+#
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
+#
 
 name: Python
 
@@ -14,10 +16,15 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: python-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   quality:
     name: Validate, Package, and Test
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -48,16 +55,19 @@ jobs:
           diff --recursive --brief dist/catalog-a dist/catalog-b
       - name: Test with coverage
         run: uv run pytest --cov-report=xml
+      - name: Build package distributions
+        run: uv build
+      - name: Smoke-test the installed wheel
+        run: |
+          wheel="$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
+          test -n "${wheel}"
+          venv="${RUNNER_TEMP}/heartwood-skills-wheel"
+          uv venv --clear "${venv}"
+          uv pip install --python "${venv}/bin/python" "${wheel}"
+          "${venv}/bin/heartwood-skill-catalog" --help
       - name: Upload coverage
         uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: true
           files: coverage.xml
           use_oidc: true
-      - name: Upload catalog candidate
-        uses: actions/upload-artifact@v6
-        with:
-          name: heartwood-skill-catalog-${{ github.sha }}
-          path: dist/catalog-a
-          if-no-files-found: error
-          retention-days: 14
