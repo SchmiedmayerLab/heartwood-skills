@@ -280,6 +280,15 @@ def test_active_skill_extensions_fail_closed(tmp_path: Path) -> None:
         inspect_skill(mcp)
 
 
+def test_instruction_only_skill_does_not_require_an_entrypoint(tmp_path: Path) -> None:
+    root = _copy_skill(tmp_path)
+    _replace(root, '  heartwood.entrypoint: "scripts/run.py"\n', "")
+
+    inspected = inspect_skill(root)
+
+    assert inspected.policy.entrypoint is None
+
+
 def test_non_regular_or_unsafe_skill_content_fails_closed(tmp_path: Path) -> None:
     linked = _copy_skill(tmp_path / "linked")
     outside = tmp_path / "outside.txt"

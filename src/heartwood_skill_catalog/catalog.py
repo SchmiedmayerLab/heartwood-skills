@@ -45,7 +45,6 @@ _HEARTWOOD_KEYS = {
     "heartwood.approval-summary",
     "heartwood.controlled-data",
     "heartwood.dataset-types",
-    "heartwood.entrypoint",
     "heartwood.id",
     "heartwood.phi-risk",
     "heartwood.platforms",
