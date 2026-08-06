@@ -26,6 +26,7 @@ from heartwood_skill_catalog import (
     SkillFile,
     SkillPolicy,
     build_catalog,
+    copy_skill_tree,
     extract_skill_archive,
     inspect_skill,
 )
@@ -169,6 +170,40 @@ def test_catalog_archive_extracts_atomically_and_revalidates_openhands(tmp_path:
 
     with pytest.raises(CatalogBuildError, match="already exists"):
         extract_skill_archive(entry, archive, destination)
+
+
+def test_local_skill_copy_is_atomic_and_detects_source_replacement(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = _copy_skill(tmp_path / "source")
+    destination = tmp_path / "installed" / source.name
+    assert copy_skill_tree(source, destination) == destination.resolve()
+    assert inspect_skill(destination).tree_sha256 == inspect_skill(source).tree_sha256
+
+    changing_source = _copy_skill(tmp_path / "changing")
+    changed_file = changing_source / "assets" / "output-schema.json"
+    changed_file_resolved = changed_file.resolve()
+    original_open = catalog_module._open_source_file
+    replaced = False
+
+    def replace_before_open(
+        path: Path,
+        flags: int,
+    ) -> int:
+        nonlocal replaced
+        candidate = Path(path).resolve()
+        if candidate == changed_file_resolved and not replaced:
+            replaced = True
+            content = changed_file.read_bytes()
+            changed_file.unlink()
+            changed_file.write_bytes(content)
+        return original_open(path, flags)
+
+    monkeypatch.setattr(catalog_module, "_open_source_file", replace_before_open)
+    with pytest.raises(CatalogBuildError, match="changed during copy"):
+        copy_skill_tree(changing_source, tmp_path / "rejected" / changing_source.name)
+    assert not (tmp_path / "rejected" / changing_source.name).exists()
 
 
 def test_catalog_archive_rejects_missing_or_substituted_content(tmp_path: Path) -> None:

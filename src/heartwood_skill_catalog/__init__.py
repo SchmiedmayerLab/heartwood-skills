@@ -13,6 +13,7 @@ from heartwood_skill_catalog.catalog import (
     SkillFile,
     SkillPolicy,
     build_catalog,
+    copy_skill_tree,
     extract_skill_archive,
     inspect_skill,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "SkillFile",
     "SkillPolicy",
     "build_catalog",
+    "copy_skill_tree",
     "extract_skill_archive",
     "inspect_skill",
 ]

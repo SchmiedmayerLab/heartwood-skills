@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import stat
@@ -434,6 +435,82 @@ def extract_skill_archive(entry: CatalogEntry, archive_path: Path, destination: 
     except (CatalogBuildError, OSError, zipfile.BadZipFile):
         shutil.rmtree(staging_parent, ignore_errors=True)
         raise
+
+
+def copy_skill_tree(source: Path, destination: Path) -> Path:
+    """Copy one verified local Skill without following links or accepting a changed file."""
+    inspected = inspect_skill(source)
+    target = destination.resolve()
+    if target.exists():
+        raise CatalogBuildError(f"Skill destination already exists: {destination}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    staging_parent = Path(tempfile.mkdtemp(prefix=f".{target.name}-", dir=target.parent))
+    staging = staging_parent / inspected.name
+    staging.mkdir()
+    try:
+        for record in inspected.files:
+            relative = PurePosixPath(record.path)
+            source_file = inspected.root.joinpath(*relative.parts)
+            output = staging.joinpath(*relative.parts)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            _copy_verified_file(source_file, output, record)
+        copied = inspect_skill(staging)
+        if copied.name != inspected.name or copied.tree_sha256 != inspected.tree_sha256:
+            raise CatalogBuildError("Local Skill changed while it was being copied")
+        staging.replace(target)
+        staging_parent.rmdir()
+        return target
+    except (CatalogBuildError, OSError):
+        shutil.rmtree(staging_parent, ignore_errors=True)
+        raise
+
+
+def _copy_verified_file(source: Path, destination: Path, record: SkillFile) -> None:
+    before = source.lstat()
+    if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size != record.size:
+        raise CatalogBuildError(f"Skill file changed before copy: {record.path}")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = _open_source_file(source, flags)
+    except OSError as error:
+        raise CatalogBuildError(f"Unable to open Skill file safely: {record.path}") from error
+    digest = hashlib.sha256()
+    written = 0
+    try:
+        opened = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(opened.st_mode)
+            or opened.st_nlink != 1
+            or (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino)
+            or opened.st_size != record.size
+        ):
+            raise CatalogBuildError(f"Skill file changed during copy: {record.path}")
+        with os.fdopen(descriptor, "rb", closefd=False) as input_file, destination.open(
+            "xb"
+        ) as output_file:
+            while chunk := input_file.read(1024 * 1024):
+                written += len(chunk)
+                if written > record.size:
+                    raise CatalogBuildError(f"Skill file grew during copy: {record.path}")
+                digest.update(chunk)
+                output_file.write(chunk)
+            output_file.flush()
+            os.fsync(output_file.fileno())
+    finally:
+        os.close(descriptor)
+    after = source.lstat()
+    if (
+        written != record.size
+        or digest.hexdigest() != record.sha256
+        or (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+        != (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
+    ):
+        raise CatalogBuildError(f"Skill file changed during copy: {record.path}")
+    destination.chmod(0o755 if record.executable else 0o644)
+
+
+def _open_source_file(source: Path, flags: int) -> int:
+    return os.open(source, flags)
 
 
 def _scan_tree(root: Path) -> tuple[SkillFile, ...]:
