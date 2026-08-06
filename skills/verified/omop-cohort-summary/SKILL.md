@@ -12,7 +12,7 @@ metadata:
   heartwood.version: "1.0.0"
   heartwood.dataset-types: "omop-cdm"
   heartwood.platforms: "generic,terra"
-  heartwood.phi-risk: "none"
+  heartwood.phi-risk: "reads-phi"
   heartwood.requires-network: "false"
   heartwood.controlled-data: "not-approved"
   heartwood.approval-summary: "Reads OMOP-like person and condition-occurrence tables and writes aggregate counts and quality checks without row values."

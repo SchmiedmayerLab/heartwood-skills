@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if not args.skills_root.is_dir():
             raise CatalogBuildError(f"Skills root does not exist: {args.skills_root}")
-        revision = args.revision or _git_revision(args.skills_root)
+        revision = _git_revision(args.skills_root, expected=args.revision)
         document = build_catalog(
             args.skills_root,
             args.output,
@@ -80,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(str(error))
 
 
-def _git_revision(source: Path) -> str:
+def _git_revision(source: Path, *, expected: str | None = None) -> str:
     repository = subprocess.run(
         ["git", "-C", str(source), "rev-parse", "--show-toplevel"],
         check=True,
@@ -94,15 +94,16 @@ def _git_revision(source: Path) -> str:
         text=True,
     ).stdout
     if status:
-        raise CatalogBuildError(
-            "Git working tree is not clean; commit the changes or provide --revision"
-        )
-    return subprocess.run(
+        raise CatalogBuildError("Git working tree is not clean; commit the changes before building")
+    revision = subprocess.run(
         ["git", "-C", repository, "rev-parse", "HEAD"],
         check=True,
         capture_output=True,
         text=True,
     ).stdout.strip()
+    if expected is not None and expected != revision:
+        raise CatalogBuildError("Requested revision does not match the checked-out commit")
+    return revision
 
 
 if __name__ == "__main__":  # pragma: no cover

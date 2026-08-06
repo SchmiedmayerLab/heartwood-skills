@@ -12,7 +12,7 @@ metadata:
   heartwood.version: "1.0.0"
   heartwood.dataset-types: "omop-cdm"
   heartwood.platforms: "generic,terra"
-  heartwood.phi-risk: "none"
+  heartwood.phi-risk: "reads-phi"
   heartwood.requires-network: "false"
   heartwood.controlled-data: "not-approved"
   heartwood.approval-summary: "Reads OMOP-like CSV tables and writes aggregate training diagnostics without row-level values or predictions."

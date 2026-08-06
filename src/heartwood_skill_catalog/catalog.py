@@ -266,10 +266,16 @@ def inspect_skill(skill_root: Path) -> _InspectedSkill:
     skill_path = root / "SKILL.md"
     if not root.is_dir() or not skill_path.is_file():
         raise CatalogBuildError(f"Skill is missing SKILL.md: {skill_root}")
-    try:
-        skill = Skill.load(skill_path, strict=True)
-    except (OSError, SkillError, ValidationError, ValueError, YAMLError) as error:
-        raise CatalogBuildError(f"OpenHands rejected Skill {skill_root.name}: {error}") from error
+    with tempfile.TemporaryDirectory(prefix="heartwood-skill-inspection-") as temporary:
+        snapshot_root = Path(temporary) / root.name
+        snapshot_root.mkdir()
+        files = _scan_tree(root, snapshot_root=snapshot_root)
+        try:
+            skill = Skill.load(snapshot_root / "SKILL.md", strict=True)
+        except (OSError, SkillError, ValidationError, ValueError, YAMLError) as error:
+            raise CatalogBuildError(
+                f"OpenHands rejected Skill {skill_root.name}: {error}"
+            ) from error
     if not skill.is_agentskills_format:
         raise CatalogBuildError(f"Skill does not use the Agent Skills format: {skill_root.name}")
     if not skill.description:
@@ -303,11 +309,10 @@ def inspect_skill(skill_root: Path) -> _InspectedSkill:
     except ValidationError as error:
         raise CatalogBuildError(f"Skill {skill.name} has invalid Heartwood metadata") from error
 
-    files = _scan_tree(root)
     paths = {item.path for item in files}
     if policy.entrypoint is not None and policy.entrypoint not in paths:
         raise CatalogBuildError(f"Skill entrypoint does not exist: {policy.entrypoint}")
-    dynamic_context = "!`" in skill_path.read_text(encoding="utf-8")
+    dynamic_context = "!`" in skill.content
     mcp_servers = tuple(sorted((skill.mcp_tools or {}).keys()))
     if dynamic_context:
         raise CatalogBuildError(
@@ -576,7 +581,7 @@ def _open_source_file(source: Path, flags: int) -> int:
     return os.open(source, flags)
 
 
-def _scan_tree(root: Path) -> tuple[SkillFile, ...]:
+def _scan_tree(root: Path, *, snapshot_root: Path | None = None) -> tuple[SkillFile, ...]:
     records: list[SkillFile] = []
     normalized_paths: set[str] = set()
     total_size = 0
@@ -593,9 +598,7 @@ def _scan_tree(root: Path) -> tuple[SkillFile, ...]:
             raise CatalogBuildError(f"Skill files cannot be hard linked: {relative}")
         if len(records) >= _MAX_FILES:
             raise CatalogBuildError(f"Skill tree exceeds {_MAX_FILES} files: {root.name}")
-        content = path.read_bytes()
-        if len(content) > _MAX_FILE_BYTES:
-            raise CatalogBuildError(f"Skill file exceeds {_MAX_FILE_BYTES} bytes: {relative}")
+        content, source_mode = _read_bounded_regular_file(path, relative)
         total_size += len(content)
         if total_size > _MAX_TOTAL_BYTES:
             raise CatalogBuildError(f"Skill tree exceeds {_MAX_TOTAL_BYTES} bytes: {root.name}")
@@ -604,7 +607,7 @@ def _scan_tree(root: Path) -> tuple[SkillFile, ...]:
         if normalized_path in normalized_paths:
             raise CatalogBuildError(f"Skill tree contains duplicate paths: {relative_posix}")
         normalized_paths.add(normalized_path)
-        executable = bool(file_stat.st_mode & 0o111)
+        executable = bool(source_mode & 0o111)
         if executable and relative.parts[0] != "scripts":
             raise CatalogBuildError(
                 f"Executable files must be contained in scripts/: {relative_posix}"
@@ -618,6 +621,11 @@ def _scan_tree(root: Path) -> tuple[SkillFile, ...]:
                 executable=executable,
             )
         )
+        if snapshot_root is not None:
+            snapshot = snapshot_root.joinpath(*relative.parts)
+            snapshot.parent.mkdir(parents=True, exist_ok=True)
+            snapshot.write_bytes(content)
+            snapshot.chmod(0o755 if executable else 0o644)
     if "SKILL.md" not in {record.path for record in records}:
         raise CatalogBuildError(f"Skill tree is missing its regular SKILL.md: {root.name}")
     return tuple(records)
@@ -647,12 +655,58 @@ def _write_archive(skill: _InspectedSkill, destination: Path) -> None:
     ) as archive:
         for item in skill.files:
             source = skill.root / PurePosixPath(item.path)
+            content, source_mode = _read_bounded_regular_file(source, Path(item.path))
+            if (
+                len(content) != item.size
+                or hashlib.sha256(content).hexdigest() != item.sha256
+                or bool(source_mode & 0o111) != item.executable
+            ):
+                raise CatalogBuildError(f"Skill file changed before packaging: {item.path}")
             info = zipfile.ZipInfo(f"{skill.name}/{item.path}", date_time=(1980, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.create_system = 3
             mode = 0o755 if item.executable else 0o644
             info.external_attr = (stat.S_IFREG | mode) << 16
-            archive.writestr(info, source.read_bytes(), compress_type=zipfile.ZIP_DEFLATED)
+            archive.writestr(info, content, compress_type=zipfile.ZIP_DEFLATED)
+
+
+def _read_bounded_regular_file(source: Path, relative: Path) -> tuple[bytes, int]:
+    """Read one stable regular file through a non-following descriptor."""
+    before = source.lstat()
+    if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+        raise CatalogBuildError(f"Skill trees may contain only regular files: {relative}")
+    if before.st_size > _MAX_FILE_BYTES:
+        raise CatalogBuildError(f"Skill file exceeds {_MAX_FILE_BYTES} bytes: {relative}")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = _open_source_file(source, flags)
+    except OSError as error:
+        raise CatalogBuildError(f"Unable to open Skill file safely: {relative}") from error
+    try:
+        opened = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(opened.st_mode)
+            or opened.st_nlink != 1
+            or (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino)
+        ):
+            raise CatalogBuildError(f"Skill file changed during inspection: {relative}")
+        content = bytearray()
+        while chunk := os.read(descriptor, min(64 * 1024, _MAX_FILE_BYTES + 1 - len(content))):
+            content.extend(chunk)
+            if len(content) > _MAX_FILE_BYTES:
+                raise CatalogBuildError(f"Skill file exceeds {_MAX_FILE_BYTES} bytes: {relative}")
+        after_open = os.fstat(descriptor)
+    finally:
+        os.close(descriptor)
+    after = source.lstat()
+    stable_fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+    if any(
+        getattr(before, field) != getattr(after_open, field)
+        or getattr(before, field) != getattr(after, field)
+        for field in stable_fields
+    ):
+        raise CatalogBuildError(f"Skill file changed during inspection: {relative}")
+    return bytes(content), opened.st_mode
 
 
 def _file_role(
