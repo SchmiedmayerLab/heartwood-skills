@@ -27,6 +27,7 @@ uv sync --locked
 ## Make a Change
 
 - Follow the [Agent Skills specification](https://agentskills.io/specification).
+- Add one complete package at `skills/<skill-name>/`; directories do not represent review states.
 - Keep the complete package in one Skill directory; add optional `scripts/`, `references/`, and `assets/` directories only when the workflow needs them.
 - Declare the [Heartwood policy metadata and permissions](https://schmiedmayerlab.github.io/heartwood/preview/contribute/skills/#declare-heartwood-policy) accurately.
 - Do not embed credentials, participant-level data, model weights, generated results, or private platform evidence.

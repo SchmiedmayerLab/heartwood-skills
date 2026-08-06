@@ -18,10 +18,12 @@ SPDX-License-Identifier: MIT
 Heartwood Skills is the curated source for reusable biomedical-research workflows used by [Heartwood](https://github.com/SchmiedmayerLab/heartwood).
 Each Skill directory follows the [Agent Skills specification](https://agentskills.io/specification) and loads through the public OpenHands Skill interface.
 A Skill may include scripts, references, and static assets when its workflow needs them.
+Complete curated packages live directly under `skills/<skill-name>/`; directory names do not represent review or publication states.
 
 Repository review confirms that one revision passed the catalog's source, policy, and compatibility checks.
 Immutable candidate builds and attestations establish source provenance; Heartwood deployment and project policy remain authoritative for installation and access.
 See [Skill Trust and Distribution](https://schmiedmayerlab.github.io/heartwood/preview/architecture/skills/) for the complete trust and publication contract.
+See [Contribute Research Skills](https://schmiedmayerlab.github.io/heartwood/preview/contribute/skills/) for package layout and the supported curated, external-catalog, and project-local source paths.
 
 ## Available Skills
 

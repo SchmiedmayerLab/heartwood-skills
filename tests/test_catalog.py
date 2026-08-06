@@ -36,7 +36,7 @@ from heartwood_skill_catalog import (
 from heartwood_skill_catalog import catalog as catalog_module
 from heartwood_skill_catalog.cli import _git_snapshot, main
 
-_SKILLS = Path("skills/verified")
+_SKILLS = Path("skills")
 _REPOSITORY = "https://github.com/SchmiedmayerLab/heartwood-skills"
 _REVISION = "a" * 40
 
@@ -49,7 +49,7 @@ def _copy_skill(tmp_path: Path, name: str = "aggregate-export") -> Path:
 
 def _git_catalog_repository(tmp_path: Path) -> tuple[Path, Path, str]:
     repository = tmp_path / "repository"
-    skills = repository / "skills/verified"
+    skills = repository / "skills"
     shutil.copytree(_SKILLS, skills)
     (repository / "revocations.toml").write_text(
         'schema_version = "heartwood.skill-revocations.v1"\n',

@@ -30,6 +30,7 @@ Heartwood owns acquisition, installation, runtime policy, interface behavior, an
 ## Working Rules
 
 - Keep every published Skill compatible with the Agent Skills specification and the public OpenHands loader.
+- Keep each complete curated package directly under `skills/<skill-name>/`; do not encode review or publication states in directory names.
 - Keep standard metadata in `SKILL.md`; do not add a second hand-maintained metadata copy.
 - Keep generated digests, source revisions, archive sizes, and review provenance in catalog output rather than authored Skill files.
 - Treat scripts and executable extensions as active content requiring focused tests and explicit declarations.

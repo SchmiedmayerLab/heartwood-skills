@@ -19,7 +19,7 @@ from jsonschema import Draft202012Validator, ValidationError
 from heartwood_skill_catalog import SkillPolicy, inspect_skill
 
 _DATA_ROOT = Path("fixtures/synthetic/omop-like")
-_SKILLS_ROOT = Path("skills/verified")
+_SKILLS_ROOT = Path("skills")
 _AGGREGATE_EXPORT_SCHEMA = _SKILLS_ROOT / "aggregate-export/assets/output-schema.json"
 
 
