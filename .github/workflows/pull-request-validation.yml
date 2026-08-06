@@ -19,6 +19,15 @@ permissions:
   contents: read
 
 jobs:
+  codeql:
+    name: CodeQL
+    permissions:
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/codeql.yml
+  dependency-review:
+    name: Dependency Review
+    uses: ./.github/workflows/dependency-review.yml
   python:
     name: Python
     permissions:
@@ -37,7 +46,7 @@ jobs:
   ready:
     name: Skill Repository Ready
     if: ${{ always() }}
-    needs: [python, secrets, validation]
+    needs: [codeql, dependency-review, python, secrets, validation]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
