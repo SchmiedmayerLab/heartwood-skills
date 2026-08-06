@@ -1,0 +1,12 @@
+# This source file is part of the Heartwood open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+
+dirs:
+  - .
+useGitIgnore: true
+ignorePatterns:
+  - pattern: '^https://schmiedmayerlab\.github\.io/heartwood/preview/.*$'
+  - pattern: '^https://github\.com/SchmiedmayerLab/heartwood-skills/actions/workflows/main-validation\.yml/badge\.svg$'
