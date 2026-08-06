@@ -34,7 +34,7 @@ from heartwood_skill_catalog import (
     load_revocations,
 )
 from heartwood_skill_catalog import catalog as catalog_module
-from heartwood_skill_catalog.cli import main
+from heartwood_skill_catalog.cli import _git_snapshot, main
 
 _SKILLS = Path("skills/verified")
 _REPOSITORY = "https://github.com/SchmiedmayerLab/heartwood-skills"
@@ -320,7 +320,9 @@ def test_catalog_packaging_rejects_content_changed_after_inspection(tmp_path: Pa
     inspected = inspect_skill(source)
     script = source / "scripts/run.py"
     content = script.read_bytes()
-    script.write_bytes(content.replace(b"aggregate export", b"aggregate output", 1))
+    changed = content.replace(b"aggregate export", b"aggregate output", 1)
+    assert changed != content, "Fixture no longer contains the expected marker"
+    script.write_bytes(changed)
 
     with pytest.raises(CatalogBuildError, match="changed before packaging"):
         catalog_module._write_archive(inspected, tmp_path / "changed.zip")
@@ -899,6 +901,31 @@ def test_cli_reports_invalid_inputs_and_uses_the_checked_out_revision(
         (output / "catalog.json").read_text(encoding="utf-8")
     )
     assert {entry.source_revision for entry in payload.entries} == {checked_out_revision}
+
+
+def test_cli_builds_from_one_immutable_git_snapshot(
+    tmp_path: Path,
+) -> None:
+    repository, skills, checked_out_revision = _git_catalog_repository(tmp_path)
+    output = tmp_path / "catalog"
+    live_skill = skills / "aggregate-export/SKILL.md"
+    live_revocations = repository / "revocations.toml"
+    with _git_snapshot(skills, live_revocations) as (
+        snapshot_skills,
+        snapshot_revocations,
+        source_revision,
+    ):
+        live_skill.write_text("mutated after snapshot\n", encoding="utf-8")
+        live_revocations.write_text("invalid after snapshot\n", encoding="utf-8")
+        assert snapshot_skills != skills
+        document = build_catalog(
+            snapshot_skills,
+            output,
+            source_repository=_REPOSITORY,
+            source_revision=source_revision,
+            revocations=load_revocations(snapshot_revocations),
+        )
+    assert {entry.source_revision for entry in document.entries} == {checked_out_revision}
 
 
 def test_cli_rejects_dirty_revision_discovery(
