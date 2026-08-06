@@ -180,6 +180,12 @@ def test_local_skill_copy_is_atomic_and_detects_source_replacement(
     destination = tmp_path / "installed" / source.name
     assert copy_skill_tree(source, destination) == destination.resolve()
     assert inspect_skill(destination).tree_sha256 == inspect_skill(source).tree_sha256
+    with pytest.raises(CatalogBuildError, match="changed after review"):
+        copy_skill_tree(
+            source,
+            tmp_path / "digest-mismatch" / source.name,
+            expected_tree_sha256="0" * 64,
+        )
 
     changing_source = _copy_skill(tmp_path / "changing")
     changed_file = changing_source / "assets" / "output-schema.json"

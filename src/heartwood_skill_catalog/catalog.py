@@ -437,9 +437,16 @@ def extract_skill_archive(entry: CatalogEntry, archive_path: Path, destination: 
         raise
 
 
-def copy_skill_tree(source: Path, destination: Path) -> Path:
+def copy_skill_tree(
+    source: Path,
+    destination: Path,
+    *,
+    expected_tree_sha256: str | None = None,
+) -> Path:
     """Copy one verified local Skill without following links or accepting a changed file."""
     inspected = inspect_skill(source)
+    if expected_tree_sha256 is not None and inspected.tree_sha256 != expected_tree_sha256:
+        raise CatalogBuildError("Local Skill changed after review")
     target = destination.resolve()
     if target.exists():
         raise CatalogBuildError(f"Skill destination already exists: {destination}")
