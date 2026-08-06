@@ -24,6 +24,7 @@ from typing import ClassVar, Literal, cast
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 _MAX_FILES = 256
+_MAX_SKILLS = 256
 _MAX_FILE_BYTES = 8 * 1024 * 1024
 _MAX_TOTAL_BYTES = 64 * 1024 * 1024
 _MAX_ARCHIVE_BYTES = 72 * 1024 * 1024
@@ -188,7 +189,7 @@ class CatalogDocument(_Record):
     """Generated catalog target signed and distributed through TUF."""
 
     schema_version: Literal["heartwood.skill-catalog.v1"] = "heartwood.skill-catalog.v1"
-    entries: tuple[CatalogEntry, ...]
+    entries: tuple[CatalogEntry, ...] = Field(min_length=1, max_length=_MAX_SKILLS)
 
     @model_validator(mode="after")
     def _identities_are_unique(self) -> CatalogDocument:
@@ -349,11 +350,12 @@ def build_catalog(
     source_root = skills_root.resolve()
     if not source_root.is_dir():
         raise CatalogBuildError(f"Skills root does not exist: {skills_root}")
-    inspected = tuple(
-        inspect_skill(path) for path in sorted(source_root.iterdir()) if path.is_dir()
-    )
-    if not inspected:
+    skill_paths = tuple(path for path in sorted(source_root.iterdir()) if path.is_dir())
+    if not skill_paths:
         raise CatalogBuildError("Skills root does not contain any Skill directories")
+    if len(skill_paths) > _MAX_SKILLS:
+        raise CatalogBuildError(f"Skills root exceeds the {_MAX_SKILLS}-Skill catalog limit")
+    inspected = tuple(inspect_skill(path) for path in skill_paths)
     revocation_records = (revocations or SkillRevocationSet()).revocations
     revocations_by_name = {revocation.name: revocation for revocation in revocation_records}
     inspected_by_name = {skill.name: skill for skill in inspected}

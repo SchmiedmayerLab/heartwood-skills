@@ -677,6 +677,22 @@ def test_catalog_models_reject_unsafe_paths_and_duplicate_identities(tmp_path: P
     duplicate_id = document.entries[1].model_copy(update={"policy": entry.policy})
     with pytest.raises(ValidationError, match="duplicate Skill identifiers"):
         CatalogDocument(entries=(entry, duplicate_id))
+    with pytest.raises(ValidationError, match="at most 256"):
+        CatalogDocument(entries=(entry,) * 257)
+
+
+def test_catalog_rejects_an_unbounded_number_of_skill_directories(tmp_path: Path) -> None:
+    skills = tmp_path / "skills"
+    for index in range(257):
+        (skills / f"skill-{index:03d}").mkdir(parents=True)
+
+    with pytest.raises(CatalogBuildError, match="256-Skill catalog limit"):
+        build_catalog(
+            skills,
+            tmp_path / "catalog",
+            source_repository=_REPOSITORY,
+            source_revision=_REVISION,
+        )
 
 
 def test_catalog_build_failure_removes_staging_directory(
