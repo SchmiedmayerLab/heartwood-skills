@@ -309,18 +309,13 @@ def test_non_regular_or_unsafe_skill_content_fails_closed(tmp_path: Path) -> Non
         inspect_skill(hard_linked)
 
 
-def test_catalog_models_reject_inconsistent_review_and_revocation(tmp_path: Path) -> None:
+def test_catalog_models_reject_inconsistent_revocation(tmp_path: Path) -> None:
     document = build_catalog(
         _SKILLS,
         tmp_path / "catalog",
         source_repository=_REPOSITORY,
         source_revision=_REVISION,
     )
-    payload = document.entries[0].model_dump(mode="json")
-    payload["controlled_data_ready"] = True
-    with pytest.raises(ValidationError, match="must agree"):
-        CatalogEntry.model_validate(payload)
-
     payload = document.entries[0].model_dump(mode="json")
     payload["revoked"] = True
     with pytest.raises(ValidationError, match="require a reason"):
@@ -330,6 +325,21 @@ def test_catalog_models_reject_inconsistent_review_and_revocation(tmp_path: Path
     payload["revocation_reason"] = "No longer supported"
     with pytest.raises(ValidationError, match="cannot declare"):
         CatalogEntry.model_validate(payload)
+
+
+def test_catalog_rejects_controlled_data_approval_claims(tmp_path: Path) -> None:
+    skill = _copy_skill(tmp_path / "controlled-data-claim")
+    definition = skill / "SKILL.md"
+    definition.write_text(
+        definition.read_text(encoding="utf-8").replace(
+            'heartwood.controlled-data: "not-approved"',
+            'heartwood.controlled-data: "deployment-approved"',
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CatalogBuildError, match="invalid Heartwood metadata"):
+        inspect_skill(skill)
 
 
 @pytest.mark.parametrize(

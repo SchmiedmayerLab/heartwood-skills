@@ -99,7 +99,7 @@ class SkillPolicy(_Record):
     platforms: tuple[str, ...] = Field(min_length=1)
     phi_risk: Literal["none", "reads-phi", "writes-outside-boundary"]
     requires_network: bool
-    controlled_data: Literal["not-approved", "deployment-approved"]
+    controlled_data: Literal["not-approved"]
     approval_summary: str = Field(min_length=1, max_length=500)
     entrypoint: str | None = None
 
@@ -141,7 +141,6 @@ class CatalogEntry(_Record):
     source_repository: str = Field(min_length=1)
     source_revision: str = Field(min_length=40, max_length=40)
     review: Literal["repository-reviewed"] = "repository-reviewed"
-    controlled_data_ready: bool = False
     revoked: bool = False
     revocation_reason: str | None = None
 
@@ -177,9 +176,7 @@ class CatalogEntry(_Record):
         return normalized
 
     @model_validator(mode="after")
-    def _controlled_data_claim_has_policy_evidence(self) -> CatalogEntry:
-        if self.controlled_data_ready != (self.policy.controlled_data == "deployment-approved"):
-            raise ValueError("Controlled-data catalog status and Skill policy must agree")
+    def _revocation_is_complete(self) -> CatalogEntry:
         if self.revoked and not self.revocation_reason:
             raise ValueError("Revoked catalog entries require a reason")
         if not self.revoked and self.revocation_reason is not None:
@@ -255,8 +252,7 @@ def inspect_skill(skill_root: Path) -> _InspectedSkill:
             ),
             requires_network=_boolean(metadata, "heartwood.requires-network"),
             controlled_data=cast(
-                Literal["not-approved", "deployment-approved"],
-                _required(metadata, "heartwood.controlled-data"),
+                Literal["not-approved"], _required(metadata, "heartwood.controlled-data")
             ),
             approval_summary=_required(metadata, "heartwood.approval-summary"),
             entrypoint=_optional(metadata, "heartwood.entrypoint"),
@@ -343,7 +339,6 @@ def build_catalog(
                     target=target.as_posix(),
                     source_repository=source_repository,
                     source_revision=source_revision,
-                    controlled_data_ready=(skill.policy.controlled_data == "deployment-approved"),
                 )
             )
         document = CatalogDocument(entries=tuple(sorted(entries, key=lambda item: item.name)))
