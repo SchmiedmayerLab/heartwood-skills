@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "aggregate_count_floor": {"minimum": 1, "type": "integer"},
+    "status": {"enum": ["released", "suppressed"]}
+  },
+  "required": ["aggregate_count_floor", "status"],
+  "type": "object"
+}

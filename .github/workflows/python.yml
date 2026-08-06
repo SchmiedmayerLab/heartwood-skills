@@ -1,0 +1,63 @@
+# This source file is part of the Heartwood Skills open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+
+name: Python
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  quality:
+    name: Validate, Package, and Test
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+      - name: Install the pinned Python toolchain
+        run: uv python install
+      - name: Install locked dependencies
+        run: uv sync --locked
+      - name: Check formatting
+        run: uv run ruff format --check .
+      - name: Lint Python
+        run: uv run ruff check --output-format=github .
+      - name: Check high-confidence dead code
+        run: uv run vulture
+      - name: Type-check
+        run: uv run mypy src tests
+      - name: Validate complete Agent Skill trees
+        run: uv run heartwood-skill-catalog validate
+      - name: Build deterministic catalog targets twice
+        run: |
+          uv run heartwood-skill-catalog build --output dist/catalog-a --revision "${GITHUB_SHA}"
+          uv run heartwood-skill-catalog build --output dist/catalog-b --revision "${GITHUB_SHA}"
+          diff --recursive --brief dist/catalog-a dist/catalog-b
+      - name: Test with coverage
+        run: uv run pytest --cov-report=xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v7
+        with:
+          fail_ci_if_error: true
+          files: coverage.xml
+          use_oidc: true
+      - name: Upload catalog candidate
+        uses: actions/upload-artifact@v6
+        with:
+          name: heartwood-skill-catalog-${{ github.sha }}
+          path: dist/catalog-a
+          if-no-files-found: error
+          retention-days: 14

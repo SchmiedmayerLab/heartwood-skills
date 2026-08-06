@@ -1,0 +1,113 @@
+# This source file is part of the Heartwood Skills open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors
+#
+# SPDX-License-Identifier: MIT
+
+[project]
+name = "heartwood-skill-catalog"
+version = "0.1.0"
+description = "Validation and deterministic catalog tooling for curated Heartwood Agent Skills."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Stanford University and the project authors" }]
+dependencies = [
+    "openhands-sdk==1.40.0",
+    "pydantic>=2.12",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+heartwood-skill-catalog = "heartwood_skill_catalog.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.0",
+    "pytest>=8.4",
+    "pytest-cov>=7.0",
+    "ruff>=0.16.0",
+    "types-pyyaml>=6.0.12.20250915",
+    "vulture>=2.16",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/heartwood_skill_catalog"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "ANN",
+    "B",
+    "C4",
+    "D",
+    "E",
+    "ERA",
+    "F",
+    "I",
+    "N",
+    "PTH",
+    "PT",
+    "RUF",
+    "SIM",
+    "TID",
+    "UP",
+    "W",
+]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["heartwood_skill_catalog"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.vulture]
+ignore_names = ["cls"]
+min_confidence = 100
+paths = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra --strict-markers --strict-config --cov=heartwood_skill_catalog --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source_pkgs = ["heartwood_skill_catalog"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
