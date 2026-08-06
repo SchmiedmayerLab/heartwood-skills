@@ -20,8 +20,10 @@ The repository maintainers will assess the affected content and coordinate discl
 
 ## Trust Boundary
 
-Repository review establishes source provenance and compatibility with the documented Heartwood policy.
-It does not establish institutional approval, HIPAA compliance, authorization to process controlled data, or permission to export results.
+Repository review confirms that one revision passed the catalog's source, policy, and compatibility checks.
+Immutable candidate builds and attestations establish source provenance.
+Neither establishes institutional approval, HIPAA compliance, authorization to process controlled data, or permission to export results.
 Heartwood deployment policy and platform controls remain authoritative.
 
 See [Security and Controlled Data](https://schmiedmayerlab.github.io/heartwood/preview/operate/security/) and [Skill Trust and Distribution](https://schmiedmayerlab.github.io/heartwood/preview/architecture/skills/) in the Heartwood documentation.
+Supported Heartwood releases pin exact Skill revisions and follow the project [Support and Compatibility](https://schmiedmayerlab.github.io/heartwood/preview/operate/support/) policy.

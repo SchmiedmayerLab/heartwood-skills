@@ -14,7 +14,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-_SKILL_ID = "heartwood.synthetic.aggregate-export"
+_SKILL_ID = "heartwood.research.aggregate-export"
 
 
 def _mapping(value: object, name: str) -> Mapping[str, object]:

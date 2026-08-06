@@ -8,7 +8,7 @@
 
 name: Research Skill Proposal
 description: Propose a reusable biomedical-research workflow for the curated catalog.
-title: "Replace this title with a descriptive Skill name."
+title: ""
 labels: ["enhancement"]
 body:
   - type: textarea

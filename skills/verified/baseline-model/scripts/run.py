@@ -16,7 +16,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-_SKILL_ID = "heartwood.synthetic.baseline-model"
+_SKILL_ID = "heartwood.research.baseline-model"
 _DEFAULT_TARGET_CONCEPT_ID = 201826
 
 

@@ -16,10 +16,11 @@ SPDX-License-Identifier: MIT
 [Stable Heartwood Documentation](https://schmiedmayerlab.github.io/heartwood/) · [Prerelease Heartwood Documentation](https://schmiedmayerlab.github.io/heartwood/preview/)
 
 Heartwood Skills is the curated source for reusable biomedical-research workflows used by [Heartwood](https://github.com/SchmiedmayerLab/heartwood).
-Each Skill directory is a complete [Agent Skill](https://agentskills.io/specification) package that loads through the public OpenHands Skill interface, including its instructions, scripts, references, and static assets.
+Each Skill directory follows the [Agent Skills specification](https://agentskills.io/specification) and loads through the public OpenHands Skill interface.
+A Skill may include scripts, references, and static assets when its workflow needs them.
 
-Repository review establishes provenance and compatibility with Heartwood.
-It does not grant filesystem, network, credential, model, or controlled-data access; the Heartwood deployment and project policy remain authoritative.
+Repository review confirms that one revision passed the catalog's source, policy, and compatibility checks.
+Immutable candidate builds and attestations establish source provenance; Heartwood deployment and project policy remain authoritative for installation and access.
 See [Skill Trust and Distribution](https://schmiedmayerlab.github.io/heartwood/preview/architecture/skills/) for the complete trust and publication contract.
 
 ## Available Skills
@@ -35,7 +36,7 @@ Repository review does not constitute institutional approval for controlled data
 
 ## Contribute a Skill
 
-Start with the [Heartwood contribution documentation](https://schmiedmayerlab.github.io/heartwood/preview/contribute/) and the local [contribution guide](CONTRIBUTING.md).
+Start with the [Heartwood Skill contribution documentation](https://schmiedmayerlab.github.io/heartwood/preview/contribute/skills/) and the local [contribution guide](CONTRIBUTING.md).
 Use synthetic fixtures only.
 
 Install [uv](https://docs.astral.sh/uv/), then run:

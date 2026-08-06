@@ -26,7 +26,7 @@
     "exported": {"type": "boolean"},
     "reason": {"minLength": 1, "type": "string"},
     "schema_version": {"const": "heartwood.skill-output.v1"},
-    "skill_id": {"const": "heartwood.synthetic.aggregate-export"},
+    "skill_id": {"const": "heartwood.research.aggregate-export"},
     "suppressed": {"type": "boolean"}
   },
   "required": [

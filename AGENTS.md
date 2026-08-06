@@ -24,7 +24,8 @@ Heartwood owns acquisition, installation, runtime policy, interface behavior, an
 | User-facing Skill workflow | [Heartwood Research Skills](https://schmiedmayerlab.github.io/heartwood/preview/use/skills/) |
 | Skill trust, publication, and revocation | [Heartwood Skill Trust and Distribution](https://schmiedmayerlab.github.io/heartwood/preview/architecture/skills/) |
 | Heartwood development boundaries | [Heartwood Development Guide](https://schmiedmayerlab.github.io/heartwood/preview/contribute/development/) |
-| Planned work and acceptance criteria | [Heartwood Issues](https://github.com/SchmiedmayerLab/heartwood/issues) |
+| Skill content and catalog work | [Heartwood Skills Issues](https://github.com/SchmiedmayerLab/heartwood-skills/issues) |
+| Runtime, policy, interface, and deployment work | [Heartwood Issues](https://github.com/SchmiedmayerLab/heartwood/issues) |
 
 ## Working Rules
 

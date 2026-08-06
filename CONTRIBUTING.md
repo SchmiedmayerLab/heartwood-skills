@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 Heartwood Skills accepts focused additions and corrections to reusable biomedical-research workflows.
 Public source, tests, examples, and logs must contain synthetic data only.
 
-The canonical Skill format, policy, review, publication, and revocation guidance is maintained in the [Heartwood contribution documentation](https://schmiedmayerlab.github.io/heartwood/preview/contribute/).
+The canonical Skill format, policy, review, publication, and revocation guidance is maintained in the [Heartwood Skill contribution documentation](https://schmiedmayerlab.github.io/heartwood/preview/contribute/skills/).
 Read that guidance and [AGENTS.md](AGENTS.md) before changing a Skill or catalog tooling.
 
 ## Prepare the Repository
@@ -27,8 +27,8 @@ uv sync --locked
 ## Make a Change
 
 - Follow the [Agent Skills specification](https://agentskills.io/specification).
-- Keep the complete package in one Skill directory, including `scripts/`, `references/`, and `assets/`.
-- Declare the complete Heartwood policy metadata and permissions used by the existing Skills.
+- Keep the complete package in one Skill directory; add optional `scripts/`, `references/`, and `assets/` directories only when the workflow needs them.
+- Declare the [Heartwood policy metadata and permissions](https://schmiedmayerlab.github.io/heartwood/preview/contribute/skills/#declare-heartwood-policy) accurately.
 - Do not embed credentials, participant-level data, model weights, generated results, or private platform evidence.
 - Reuse the Agent Skills and OpenHands contracts rather than introducing another Skill format or loader.
 - Add deterministic tests for changed scripts, validation, policy, packaging, or revocation behavior.

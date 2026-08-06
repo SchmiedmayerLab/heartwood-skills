@@ -66,6 +66,7 @@ def test_omop_cohort_summary_script_emits_qc_and_export_guard(tmp_path: Path) ->
 
     assert completed.stdout == "Wrote aggregate cohort summary to cohort-summary.json.\n"
     payload = _load_json(output)
+    assert payload["skill_id"] == _policy("omop-cohort-summary")[1].skill_id
     summary = payload["summary"]
     quality_checks = payload["quality_checks"]
     export_guard = payload["export_guard"]
@@ -148,6 +149,7 @@ def test_reference_cohort_exports_only_aggregate_counts(tmp_path: Path) -> None:
 
     payload = _load_json(export_path)
     _assert_aggregate_export_schema(payload)
+    assert payload["skill_id"] == _policy("aggregate-export")[1].skill_id
     assert payload["exported"] is True
     assert payload["suppressed"] is False
     assert payload["aggregates"] == {
@@ -195,7 +197,7 @@ def test_aggregate_export_schema_requires_one_decision() -> None:
         "exported": False,
         "reason": "No export decision",
         "schema_version": "heartwood.skill-output.v1",
-        "skill_id": "heartwood.synthetic.aggregate-export",
+        "skill_id": "heartwood.research.aggregate-export",
         "suppressed": False,
     }
 
@@ -293,6 +295,7 @@ def test_baseline_model_script_omits_row_values(tmp_path: Path) -> None:
         str(output),
     )
     payload = _load_json(output)
+    assert payload["skill_id"] == _policy("baseline-model")[1].skill_id
     model = payload["model"]
     training_summary = payload["training_summary"]
     quality_checks = payload["quality_checks"]

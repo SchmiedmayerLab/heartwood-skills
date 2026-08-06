@@ -8,14 +8,14 @@
 
 name: Catalog Improvement
 description: Propose a change to catalog validation, packaging, or repository automation.
-title: "Replace this title with a concise description."
+title: ""
 labels: ["enhancement"]
 body:
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: Describe the repository, validation, or publication problem to solve.
+      description: Describe the repository, validation, or catalog-generation problem to solve.
     validations:
       required: true
   - type: textarea

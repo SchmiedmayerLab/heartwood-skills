@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 ### :recycle: Current Situation & Problem
 
-<!-- Link the Heartwood issue that defines the problem and acceptance criteria. -->
+<!-- Link the Heartwood Skills issue that defines the change, plus a Heartwood issue when the work crosses repository boundaries. -->
 
 
 ### :gear: Release Notes

@@ -16,7 +16,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any
 
-_SKILL_ID = "heartwood.synthetic.omop-cohort-summary"
+_SKILL_ID = "heartwood.research.omop-cohort-summary"
 _DEFAULT_TARGET_CONCEPT_ID = 201826
 
 

@@ -14,7 +14,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: python-${{ github.workflow }}-${{ github.ref }}
@@ -25,6 +24,8 @@ jobs:
     name: Validate, Package, and Test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -65,6 +66,27 @@ jobs:
           uv venv --clear "${venv}"
           uv pip install --python "${venv}/bin/python" "${wheel}"
           "${venv}/bin/heartwood-skill-catalog" --help
+      - name: Preserve coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-coverage
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 1
+
+  coverage:
+    name: Upload Coverage
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download coverage report
+        uses: actions/download-artifact@v8
+        with:
+          name: python-coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v7
         with:

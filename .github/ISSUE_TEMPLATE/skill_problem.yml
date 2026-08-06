@@ -8,7 +8,7 @@
 
 name: Skill Problem
 description: Report incorrect or unsafe behavior in an existing curated Skill.
-title: "Replace this title with a concise description."
+title: ""
 labels: ["bug"]
 body:
   - type: input
