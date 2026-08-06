@@ -1,14 +1,20 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "allOf": [
+  "oneOf": [
     {
-      "if": {"properties": {"exported": {"const": true}}, "required": ["exported"]},
-      "then": {"properties": {"suppressed": {"const": false}}}
+      "properties": {
+        "exported": {"const": true},
+        "suppressed": {"const": false}
+      },
+      "required": ["exported", "suppressed"]
     },
     {
-      "if": {"properties": {"suppressed": {"const": true}}, "required": ["suppressed"]},
-      "then": {"properties": {"exported": {"const": false}}}
+      "properties": {
+        "exported": {"const": false},
+        "suppressed": {"const": true}
+      },
+      "required": ["exported", "suppressed"]
     }
   ],
   "properties": {

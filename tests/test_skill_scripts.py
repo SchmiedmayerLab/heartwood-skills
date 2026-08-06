@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, ValidationError
 
 from heartwood_skill_catalog import SkillPolicy, inspect_skill
 
@@ -186,6 +186,21 @@ def test_aggregate_export_script_suppresses_low_counts(tmp_path: Path) -> None:
     assert payload["suppressed"] is True
     assert payload["aggregates"] == {}
     assert "participant_count" not in json.dumps(payload["aggregates"])
+
+
+def test_aggregate_export_schema_requires_one_decision() -> None:
+    payload = {
+        "aggregate_count_floor": 20,
+        "aggregates": {},
+        "exported": False,
+        "reason": "No export decision",
+        "schema_version": "heartwood.skill-output.v1",
+        "skill_id": "heartwood.synthetic.aggregate-export",
+        "suppressed": False,
+    }
+
+    with pytest.raises(ValidationError):
+        _assert_aggregate_export_schema(payload)
 
 
 def test_aggregate_export_script_rejects_negative_floor(tmp_path: Path) -> None:
