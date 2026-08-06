@@ -1,6 +1,6 @@
 ---
 # This source file is part of the Heartwood Skills open-source project
-# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 # SPDX-License-Identifier: MIT
 name: aggregate-export
 description: Apply a configured participant-count floor before exporting an aggregate cohort summary. Use when preparing bounded cohort results for review or export.

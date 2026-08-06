@@ -1,6 +1,6 @@
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 #
 # SPDX-License-Identifier: MIT
 
@@ -112,9 +112,11 @@ def build_summary(
             continue
         condition_occurrence_ids.add(occurrence_id)
         person_id = row.get("person_id", "").strip()
+        if not person_id:
+            missing_reference_ids.add("")
+            continue
         if person_id not in birth_years:
-            if person_id:
-                missing_reference_ids.add(person_id)
+            missing_reference_ids.add(person_id)
             continue
         known_condition_person_ids.add(person_id)
         try:

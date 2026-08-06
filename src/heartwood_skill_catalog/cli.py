@@ -1,6 +1,6 @@
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Stanford University and the project authors
+# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 #
 # SPDX-License-Identifier: MIT
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -40,6 +41,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the catalog tooling."""
+    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
+    os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
@@ -61,7 +64,9 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 )
             return 0
-        revision = args.revision or _git_revision()
+        if not args.skills_root.is_dir():
+            raise CatalogBuildError(f"Skills root does not exist: {args.skills_root}")
+        revision = args.revision or _git_revision(args.skills_root)
         document = build_catalog(
             args.skills_root,
             args.output,
@@ -75,9 +80,25 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(str(error))
 
 
-def _git_revision() -> str:
+def _git_revision(source: Path) -> str:
+    repository = subprocess.run(
+        ["git", "-C", str(source), "rev-parse", "--show-toplevel"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    status = subprocess.run(
+        ["git", "-C", repository, "status", "--porcelain", "--untracked-files=all"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    if status:
+        raise CatalogBuildError(
+            "Git working tree is not clean; commit the changes or provide --revision"
+        )
     return subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "-C", repository, "rev-parse", "HEAD"],
         check=True,
         capture_output=True,
         text=True,

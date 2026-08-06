@@ -1,6 +1,6 @@
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Stanford University and the project authors
+# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 #
 # SPDX-License-Identifier: MIT
 
@@ -62,7 +62,7 @@ class SkillFile(_Record):
     """One regular file covered by the canonical Skill tree digest."""
 
     path: str = Field(min_length=1)
-    size: int = Field(ge=0)
+    size: int = Field(ge=0, le=_MAX_FILE_BYTES)
     sha256: str = Field(min_length=64, max_length=64)
     role: Literal["definition", "script", "reference", "asset", "mcp-config", "other"]
     executable: bool
@@ -128,10 +128,10 @@ class CatalogEntry(_Record):
     allowed_tools: tuple[str, ...]
     mcp_servers: tuple[str, ...]
     dynamic_context: bool
-    files: tuple[SkillFile, ...] = Field(min_length=1)
+    files: tuple[SkillFile, ...] = Field(min_length=1, max_length=_MAX_FILES)
     tree_sha256: str = Field(min_length=64, max_length=64)
     archive_sha256: str = Field(min_length=64, max_length=64)
-    archive_size: int = Field(gt=0)
+    archive_size: int = Field(gt=0, le=_MAX_ARCHIVE_BYTES)
     target: str = Field(min_length=1)
     source_repository: str = Field(min_length=1)
     source_revision: str = Field(min_length=40, max_length=40)
@@ -171,7 +171,12 @@ class CatalogEntry(_Record):
         return normalized
 
     @model_validator(mode="after")
-    def _revocation_is_complete(self) -> CatalogEntry:
+    def _tree_and_revocation_are_complete(self) -> CatalogEntry:
+        if sum(item.size for item in self.files) > _MAX_TOTAL_BYTES:
+            raise ValueError("Catalog Skill tree exceeds the total-size limit")
+        normalized_paths = [item.path.casefold() for item in self.files]
+        if len(normalized_paths) != len(set(normalized_paths)):
+            raise ValueError("Catalog Skill tree contains duplicate paths")
         if self.revoked and not self.revocation_reason:
             raise ValueError("Revoked catalog entries require a reason")
         if not self.revoked and self.revocation_reason is not None:
@@ -231,7 +236,7 @@ def load_revocations(path: Path) -> SkillRevocationSet:
     try:
         payload = tomllib.loads(path.read_text(encoding="utf-8"))
         return SkillRevocationSet.model_validate(payload)
-    except (OSError, tomllib.TOMLDecodeError, ValidationError) as error:
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, ValidationError) as error:
         raise CatalogBuildError(f"Skill revocation register is invalid: {path}") from error
 
 
@@ -253,11 +258,6 @@ class _InspectedSkill(_Record):
 
 def inspect_skill(skill_root: Path) -> _InspectedSkill:
     """Validate one complete Agent Skill directory without executing bundled code."""
-    import os
-
-    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
-    os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
-
     from openhands.sdk.skills import Skill
     from openhands.sdk.skills.exceptions import SkillError
     from yaml import YAMLError
@@ -591,14 +591,14 @@ def _scan_tree(root: Path) -> tuple[SkillFile, ...]:
             raise CatalogBuildError(f"Skill trees may contain only regular files: {relative}")
         if file_stat.st_nlink != 1:
             raise CatalogBuildError(f"Skill files cannot be hard linked: {relative}")
-        if file_stat.st_size > _MAX_FILE_BYTES:
-            raise CatalogBuildError(f"Skill file exceeds {_MAX_FILE_BYTES} bytes: {relative}")
-        total_size += file_stat.st_size
-        if total_size > _MAX_TOTAL_BYTES:
-            raise CatalogBuildError(f"Skill tree exceeds {_MAX_TOTAL_BYTES} bytes: {root.name}")
         if len(records) >= _MAX_FILES:
             raise CatalogBuildError(f"Skill tree exceeds {_MAX_FILES} files: {root.name}")
         content = path.read_bytes()
+        if len(content) > _MAX_FILE_BYTES:
+            raise CatalogBuildError(f"Skill file exceeds {_MAX_FILE_BYTES} bytes: {relative}")
+        total_size += len(content)
+        if total_size > _MAX_TOTAL_BYTES:
+            raise CatalogBuildError(f"Skill tree exceeds {_MAX_TOTAL_BYTES} bytes: {root.name}")
         relative_posix = relative.as_posix()
         normalized_path = relative_posix.casefold()
         if normalized_path in normalized_paths:

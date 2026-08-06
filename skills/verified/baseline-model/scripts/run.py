@@ -1,6 +1,6 @@
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 #
 # SPDX-License-Identifier: MIT
 
@@ -68,19 +68,35 @@ def build_model(
     person_rows = _read_table(data_root / "person.csv", {"person_id", "year_of_birth"})
     condition_rows = _read_table(
         data_root / "condition_occurrence.csv",
-        {"person_id", "condition_concept_id"},
+        {"person_id", "condition_concept_id", "condition_start_year"},
     )
     birth_years = {
         row["person_id"]: int(row["year_of_birth"])
         for row in person_rows
         if row.get("person_id") and row.get("year_of_birth")
     }
-    target_ids = {
-        row["person_id"]
-        for row in condition_rows
-        if row.get("person_id") in birth_years
-        and int(row["condition_concept_id"]) == target_condition_concept_id
-    }
+    target_ids: set[str] = set()
+    for row in condition_rows:
+        person_id = row.get("person_id", "")
+        if person_id not in birth_years:
+            continue
+        try:
+            concept_id = int(row["condition_concept_id"])
+        except (KeyError, ValueError) as error:
+            msg = "condition concept identifiers must be integers"
+            raise ValueError(msg) from error
+        if concept_id != target_condition_concept_id:
+            continue
+        try:
+            condition_start_year = int(row["condition_start_year"])
+        except (KeyError, ValueError) as error:
+            msg = "target condition start years must be integers"
+            raise ValueError(msg) from error
+        if condition_start_year <= 0:
+            msg = "target condition start years must be positive"
+            raise ValueError(msg)
+        if condition_start_year <= as_of_year:
+            target_ids.add(person_id)
     if len(birth_years) < 2 or not target_ids or len(target_ids) == len(birth_years):
         msg = "baseline model requires at least two participants and both outcome classes"
         raise ValueError(msg)

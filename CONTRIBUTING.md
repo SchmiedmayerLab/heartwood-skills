@@ -2,7 +2,7 @@
 
 This source file is part of the Heartwood Skills open-source project
 
-SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 
 SPDX-License-Identifier: MIT
 
@@ -20,7 +20,8 @@ Public source, tests, examples, and logs must contain synthetic data only.
 - Declare the complete Heartwood policy metadata used by the existing Skills.
 - Do not embed credentials, participant-level data, model weights, generated results, or private platform evidence.
 - Do not use OpenHands dynamic shell context or embedded MCP servers unless Heartwood first defines and tests a corresponding policy.
-- Include deterministic tests for bundled scripts and failure paths.
+- Treat bundled scripts and executable extensions as active content with explicit declarations.
+- When changing scripts, add deterministic tests for success, malformed input, boundary enforcement, and aggregate-output behavior.
 - Distinguish repository review from controlled-data approval.
 
 ## Validate the Change

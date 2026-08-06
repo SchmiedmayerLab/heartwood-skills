@@ -1,6 +1,6 @@
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Stanford University and the project authors
+# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 #
 # SPDX-License-Identifier: MIT
 
@@ -11,7 +11,7 @@ description = "Validation and deterministic catalog tooling for curated Heartwoo
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
-authors = [{ name = "Stanford University and the project authors" }]
+authors = [{ name = "Schmiedmayer Lab at Stanford University" }]
 dependencies = [
     "openhands-sdk==1.40.0",
     "pydantic>=2.12",
@@ -27,10 +27,12 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.26.0",
     "mypy>=2.3.0",
     "pytest>=8.4",
     "pytest-cov>=7.0",
     "ruff>=0.16.0",
+    "types-jsonschema>=4.26.0.20260518",
     "types-pyyaml>=6.0.12.20250915",
     "vulture>=2.16",
 ]

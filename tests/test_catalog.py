@@ -1,6 +1,6 @@
 # This source file is part of the Heartwood Skills open-source project
 #
-# SPDX-FileCopyrightText: 2026 Stanford University and the project authors
+# SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 #
 # SPDX-License-Identifier: MIT
 
@@ -689,6 +689,37 @@ def test_skill_tree_resource_limits_fail_closed(
         inspect_skill(root)
 
 
+def test_catalog_entry_enforces_complete_tree_limits(tmp_path: Path) -> None:
+    entry, _ = _catalog_entry(tmp_path)
+    file_template = entry.files[0]
+    oversized_files = tuple(
+        file_template.model_copy(
+            update={
+                "path": f"assets/{index}.bin",
+                "size": catalog_module._MAX_FILE_BYTES,
+            }
+        )
+        for index in range(9)
+    )
+    with pytest.raises(ValidationError, match="total-size limit"):
+        CatalogEntry.model_validate({**entry.model_dump(mode="json"), "files": oversized_files})
+
+    too_many_files = tuple(
+        file_template.model_copy(update={"path": f"assets/{index}.txt"})
+        for index in range(catalog_module._MAX_FILES + 1)
+    )
+    with pytest.raises(ValidationError, match="at most"):
+        CatalogEntry.model_validate({**entry.model_dump(mode="json"), "files": too_many_files})
+
+
+def test_non_utf8_revocation_register_fails_closed(tmp_path: Path) -> None:
+    path = tmp_path / "revocations.toml"
+    path.write_bytes(b"\xff\xfe")
+
+    with pytest.raises(CatalogBuildError, match="revocation register is invalid"):
+        load_revocations(path)
+
+
 def test_skill_tree_rejects_git_metadata_and_tracks_other_resources(tmp_path: Path) -> None:
     root = _copy_skill(tmp_path / "git")
     (root / ".git").mkdir()
@@ -706,15 +737,95 @@ def test_cli_reports_invalid_inputs_and_uses_the_checked_out_revision(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    with pytest.raises(SystemExit, match="2"):
+    with pytest.raises(SystemExit) as invalid_root:
         main(["validate", str(tmp_path)])
+    assert invalid_root.value.code == 2
     assert "does not contain any Skill directories" in capsys.readouterr().err
 
-    with pytest.raises(SystemExit, match="2"):
+    with pytest.raises(SystemExit) as missing_root:
         main(["build", str(tmp_path / "missing"), "--output", str(tmp_path / "catalog")])
+    assert missing_root.value.code == 2
     assert "does not exist" in capsys.readouterr().err
 
     output = tmp_path / "from-git"
-    assert main(["build", str(_SKILLS), "--output", str(output)]) == 0
-    payload = CatalogDocument.model_validate_json((output / "catalog.json").read_text())
+    assert (
+        main(
+            [
+                "build",
+                str(_SKILLS),
+                "--output",
+                str(output),
+                "--revision",
+                _REVISION,
+            ]
+        )
+        == 0
+    )
+    payload = CatalogDocument.model_validate_json(
+        (output / "catalog.json").read_text(encoding="utf-8")
+    )
     assert all(len(entry.source_revision) == 40 for entry in payload.entries)
+
+
+def test_cli_rejects_dirty_revision_discovery(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repository = tmp_path / "repository"
+    skills = repository / "skills/verified"
+    shutil.copytree(_SKILLS, skills)
+    (repository / "revocations.toml").write_text(
+        'schema_version = "heartwood.skill-revocations.v1"\n',
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "--quiet", str(repository)], check=True)
+    subprocess.run(["git", "-C", str(repository), "add", "."], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repository),
+            "-c",
+            "user.name=Heartwood Tests",
+            "-c",
+            "user.email=tests@example.invalid",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "--quiet",
+            "-m",
+            "Create test repository",
+        ],
+        check=True,
+    )
+    assert (
+        main(
+            [
+                "build",
+                str(skills),
+                "--output",
+                str(tmp_path / "clean-catalog"),
+                "--revocations",
+                str(repository / "revocations.toml"),
+            ]
+        )
+        == 0
+    )
+    (skills / "aggregate-export/SKILL.md").write_text(
+        (skills / "aggregate-export/SKILL.md").read_text(encoding="utf-8") + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as dirty_tree:
+        main(
+            [
+                "build",
+                str(skills),
+                "--output",
+                str(repository / "dist"),
+                "--revocations",
+                str(repository / "revocations.toml"),
+            ]
+        )
+
+    assert dirty_tree.value.code == 2
+    assert "Git working tree is not clean" in capsys.readouterr().err

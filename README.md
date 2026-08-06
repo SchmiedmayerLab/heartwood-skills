@@ -2,7 +2,7 @@
 
 This source file is part of the Heartwood Skills open-source project
 
-SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2026 Schmiedmayer Lab at Stanford University
 
 SPDX-License-Identifier: MIT
 
@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT
 # Heartwood Skills
 
 Heartwood Skills is the curated source for reusable biomedical-research workflows used by [Heartwood](https://github.com/SchmiedmayerLab/heartwood).
-Each directory follows the [Agent Skills specification](https://agentskills.io/specification) and loads through the public OpenHands Skill interface.
+Each Skill directory follows the [Agent Skills specification](https://agentskills.io/specification) and loads through the public OpenHands Skill interface.
 
 The repository contains complete Skill packages, including instructions, executable scripts, references, and static assets.
 It does not grant filesystem, network, model, credential, or controlled-data access.
