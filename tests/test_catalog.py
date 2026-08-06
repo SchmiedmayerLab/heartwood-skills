@@ -11,6 +11,8 @@ import json
 import os
 import shutil
 import stat
+import subprocess
+import sys
 import zipfile
 from pathlib import Path
 
@@ -39,6 +41,22 @@ def _copy_skill(tmp_path: Path, name: str = "aggregate-export") -> Path:
     root = tmp_path / name
     shutil.copytree(_SKILLS / name, root)
     return root
+
+
+def test_catalog_models_do_not_eagerly_import_openhands() -> None:
+    completed = subprocess.run(
+        (
+            sys.executable,
+            "-c",
+            "import sys; import heartwood_skill_catalog; "
+            "assert 'openhands.sdk' not in sys.modules",
+        ),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
 
 
 def _replace(root: Path, old: str, new: str) -> None:

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import shutil
 import stat
@@ -20,13 +19,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import ClassVar, Literal, cast
 
-os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
-os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
-
-from openhands.sdk.skills import Skill
-from openhands.sdk.skills.exceptions import SkillError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
-from yaml import YAMLError
 
 _MAX_FILES = 256
 _MAX_FILE_BYTES = 8 * 1024 * 1024
@@ -219,6 +212,15 @@ class _InspectedSkill(_Record):
 
 def inspect_skill(skill_root: Path) -> _InspectedSkill:
     """Validate one complete Agent Skill directory without executing bundled code."""
+    import os
+
+    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
+    os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
+
+    from openhands.sdk.skills import Skill
+    from openhands.sdk.skills.exceptions import SkillError
+    from yaml import YAMLError
+
     root = skill_root.resolve()
     skill_path = root / "SKILL.md"
     if not root.is_dir() or not skill_path.is_file():
