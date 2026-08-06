@@ -15,6 +15,7 @@ import re
 import shutil
 import stat
 import tempfile
+import tomllib
 import zipfile
 from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
@@ -195,6 +196,45 @@ class CatalogDocument(_Record):
         return self
 
 
+class SkillRevocation(_Record):
+    """One reviewed withdrawal of an exact Skill tree."""
+
+    name: str = Field(min_length=1)
+    tree_sha256: str = Field(alias="tree-sha256", min_length=64, max_length=64)
+    reason: str = Field(min_length=1, max_length=500)
+
+    @field_validator("tree_sha256")
+    @classmethod
+    def _digest_is_sha256(cls, value: str) -> str:
+        normalized = value.lower()
+        if not _SHA256_PATTERN.fullmatch(normalized):
+            raise ValueError("Revocation digest must be SHA-256")
+        return normalized
+
+
+class SkillRevocationSet(_Record):
+    """Repository-owned revocations applied during deterministic catalog generation."""
+
+    schema_version: Literal["heartwood.skill-revocations.v1"] = "heartwood.skill-revocations.v1"
+    revocations: tuple[SkillRevocation, ...] = ()
+
+    @model_validator(mode="after")
+    def _names_are_unique(self) -> SkillRevocationSet:
+        names = [revocation.name for revocation in self.revocations]
+        if len(names) != len(set(names)):
+            raise ValueError("Skill revocations contain duplicate names")
+        return self
+
+
+def load_revocations(path: Path) -> SkillRevocationSet:
+    """Load the repository-owned exact-digest revocation register."""
+    try:
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        return SkillRevocationSet.model_validate(payload)
+    except (OSError, tomllib.TOMLDecodeError, ValidationError) as error:
+        raise CatalogBuildError(f"Skill revocation register is invalid: {path}") from error
+
+
 class _InspectedSkill(_Record):
     """Validated source tree before deterministic packaging."""
 
@@ -298,6 +338,7 @@ def build_catalog(
     *,
     source_repository: str,
     source_revision: str,
+    revocations: SkillRevocationSet | None = None,
 ) -> CatalogDocument:
     """Build deterministic Skill archives and a canonical catalog target."""
     source_root = skills_root.resolve()
@@ -308,6 +349,15 @@ def build_catalog(
     )
     if not inspected:
         raise CatalogBuildError("Skills root does not contain any Skill directories")
+    revocation_records = (revocations or SkillRevocationSet()).revocations
+    revocations_by_name = {revocation.name: revocation for revocation in revocation_records}
+    inspected_by_name = {skill.name: skill for skill in inspected}
+    for name, revoked_record in revocations_by_name.items():
+        skill = inspected_by_name.get(name)
+        if skill is None:
+            raise CatalogBuildError(f"Revocation references an unknown Skill: {name}")
+        if skill.tree_sha256 != revoked_record.tree_sha256:
+            raise CatalogBuildError(f"Revocation digest does not match current Skill: {name}")
 
     destination = output_root.resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -315,6 +365,7 @@ def build_catalog(
     try:
         entries: list[CatalogEntry] = []
         for skill in inspected:
+            skill_revocation = revocations_by_name.get(skill.name)
             target = (
                 PurePosixPath("skills")
                 / skill.name
@@ -342,6 +393,10 @@ def build_catalog(
                     target=target.as_posix(),
                     source_repository=source_repository,
                     source_revision=source_revision,
+                    revoked=skill_revocation is not None,
+                    revocation_reason=(
+                        None if skill_revocation is None else skill_revocation.reason
+                    ),
                 )
             )
         document = CatalogDocument(entries=tuple(sorted(entries, key=lambda item: item.name)))
@@ -492,9 +547,10 @@ def _copy_verified_file(source: Path, destination: Path, record: SkillFile) -> N
             or opened.st_size != record.size
         ):
             raise CatalogBuildError(f"Skill file changed during copy: {record.path}")
-        with os.fdopen(descriptor, "rb", closefd=False) as input_file, destination.open(
-            "xb"
-        ) as output_file:
+        with (
+            os.fdopen(descriptor, "rb", closefd=False) as input_file,
+            destination.open("xb") as output_file,
+        ):
             while chunk := input_file.read(1024 * 1024):
                 written += len(chunk)
                 if written > record.size:

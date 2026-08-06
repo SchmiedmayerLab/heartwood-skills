@@ -13,7 +13,12 @@ import json
 import subprocess
 from pathlib import Path
 
-from heartwood_skill_catalog.catalog import CatalogBuildError, build_catalog, inspect_skill
+from heartwood_skill_catalog.catalog import (
+    CatalogBuildError,
+    build_catalog,
+    inspect_skill,
+    load_revocations,
+)
 
 _DEFAULT_REPOSITORY = "https://github.com/SchmiedmayerLab/heartwood-skills"
 
@@ -29,6 +34,7 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--output", type=Path, default=Path("dist/catalog"))
     build.add_argument("--repository", default=_DEFAULT_REPOSITORY)
     build.add_argument("--revision")
+    build.add_argument("--revocations", type=Path, default=Path("revocations.toml"))
     return parser
 
 
@@ -61,6 +67,7 @@ def main(argv: list[str] | None = None) -> int:
             args.output,
             source_repository=args.repository,
             source_revision=revision,
+            revocations=load_revocations(args.revocations),
         )
         print(f"Built {len(document.entries)} Skill targets in {args.output}")
         return 0

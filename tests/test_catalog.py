@@ -25,10 +25,13 @@ from heartwood_skill_catalog import (
     CatalogEntry,
     SkillFile,
     SkillPolicy,
+    SkillRevocation,
+    SkillRevocationSet,
     build_catalog,
     copy_skill_tree,
     extract_skill_archive,
     inspect_skill,
+    load_revocations,
 )
 from heartwood_skill_catalog import catalog as catalog_module
 from heartwood_skill_catalog.cli import main
@@ -49,8 +52,7 @@ def test_catalog_models_do_not_eagerly_import_openhands() -> None:
         (
             sys.executable,
             "-c",
-            "import sys; import heartwood_skill_catalog; "
-            "assert 'openhands.sdk' not in sys.modules",
+            "import sys; import heartwood_skill_catalog; assert 'openhands.sdk' not in sys.modules",
         ),
         check=False,
         capture_output=True,
@@ -384,6 +386,67 @@ def test_catalog_models_reject_inconsistent_revocation(tmp_path: Path) -> None:
     payload["revocation_reason"] = "No longer supported"
     with pytest.raises(ValidationError, match="cannot declare"):
         CatalogEntry.model_validate(payload)
+
+
+def test_catalog_applies_only_exact_current_revocations(tmp_path: Path) -> None:
+    inspected = inspect_skill(_SKILLS / "aggregate-export")
+    revocations = SkillRevocationSet(
+        revocations=(
+            SkillRevocation.model_validate(
+                {
+                    "name": inspected.name,
+                    "tree-sha256": inspected.tree_sha256,
+                    "reason": "Synthetic withdrawal",
+                }
+            ),
+        )
+    )
+    document = build_catalog(
+        _SKILLS,
+        tmp_path / "revoked",
+        source_repository=_REPOSITORY,
+        source_revision=_REVISION,
+        revocations=revocations,
+    )
+    revoked = next(entry for entry in document.entries if entry.name == inspected.name)
+    assert revoked.revoked
+    assert revoked.revocation_reason == "Synthetic withdrawal"
+
+    wrong_digest = revocations.model_copy(
+        update={
+            "revocations": (
+                revocations.revocations[0].model_copy(update={"tree_sha256": "0" * 64}),
+            )
+        }
+    )
+    with pytest.raises(CatalogBuildError, match="does not match current Skill"):
+        build_catalog(
+            _SKILLS,
+            tmp_path / "wrong-digest",
+            source_repository=_REPOSITORY,
+            source_revision=_REVISION,
+            revocations=wrong_digest,
+        )
+
+    unknown = revocations.model_copy(
+        update={
+            "revocations": (
+                revocations.revocations[0].model_copy(update={"name": "missing-skill"}),
+            )
+        }
+    )
+    with pytest.raises(CatalogBuildError, match="unknown Skill"):
+        build_catalog(
+            _SKILLS,
+            tmp_path / "unknown",
+            source_repository=_REPOSITORY,
+            source_revision=_REVISION,
+            revocations=unknown,
+        )
+
+
+def test_repository_revocation_register_is_valid() -> None:
+    assert load_revocations(Path("revocations.toml")).revocations == ()
 
 
 def test_catalog_rejects_controlled_data_approval_claims(tmp_path: Path) -> None:

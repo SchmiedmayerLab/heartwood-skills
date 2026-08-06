@@ -39,6 +39,10 @@ uv run pytest
 Generated catalog targets must be reproducible from the reviewed commit.
 Publication and revocation use signed TUF metadata and never rely on a mutable branch reference.
 
+To withdraw a published Skill, add its name, current complete-tree SHA-256 digest, and a concise reason to `revocations.toml`.
+Do not reuse a name-only revocation for replacement content.
+Catalog generation rejects unknown names and digest mismatches.
+
 ## Open a Pull Request
 
 Use the [Schmiedmayer Lab pull request template](https://github.com/SchmiedmayerLab/.github/blob/main/.github/pull_request_template.md).

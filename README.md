@@ -44,8 +44,9 @@ Build the deterministic catalog targets with:
 uv run heartwood-skill-catalog build
 ```
 
-Generated targets are signed and published through the repository's TUF release process rather than committed as authored Skill metadata.
-See [Contributing](CONTRIBUTING.md) for the review and testing requirements.
+The manual **Build Catalog Candidate** workflow accepts only a full commit already merged into `main`, rebuilds and tests the complete catalog, records a GitHub artifact attestation, and retains the candidate for a TUF signing event.
+An operator must establish the TUF root and signing roles before publishing a candidate as a trusted source; an attestation or mutable Git branch is not a substitute for signed TUF metadata.
+See [Distribution](DISTRIBUTION.md) for the signing boundary and [Contributing](CONTRIBUTING.md) for review and testing requirements.
 
 ## License
 
