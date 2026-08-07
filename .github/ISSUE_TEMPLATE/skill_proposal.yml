@@ -1,0 +1,54 @@
+#
+# This source file is part of the Heartwood open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Research Skill Proposal
+description: Propose a reusable biomedical-research workflow for the curated catalog.
+title: ""
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Research Use Case
+      description: Describe the recurring research task and who would use the Skill.
+      placeholder: Explain the bounded workflow rather than a one-time project request.
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow and Boundaries
+      description: Describe expected inputs, outputs, steps, and conditions where the Skill should stop.
+      placeholder: Include the decisions that must remain with the researcher.
+    validations:
+      required: true
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Required Capabilities
+      description: >-
+        List dataset types, file access, tools, network access, scripts, dependencies,
+        and supported platforms.
+      placeholder: Do not include credentials, participant-level data, or private platform evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Synthetic Validation
+      description: Describe the synthetic fixtures, expected outputs, boundary cases, and research review needed.
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/SchmiedmayerLab/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/SchmiedmayerLab/heartwood-skills/blob/main/CONTRIBUTING.md).  # yamllint disable-line rule:line-length
+      options:
+        - label: I agree to follow the Code of Conduct and Contributing Guidelines.
+          required: true

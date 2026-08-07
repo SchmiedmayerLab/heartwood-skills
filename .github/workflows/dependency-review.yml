@@ -1,0 +1,32 @@
+#
+# This source file is part of the Heartwood open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Dependency Review
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-review-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  dependency-review:
+    name: Review Dependency Changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Review dependencies
+        uses: actions/dependency-review-action@v5.0.0

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "exported": {"const": true},
+        "suppressed": {"const": false}
+      },
+      "required": ["exported", "suppressed"]
+    },
+    {
+      "properties": {
+        "exported": {"const": false},
+        "suppressed": {"const": true}
+      },
+      "required": ["exported", "suppressed"]
+    }
+  ],
+  "properties": {
+    "aggregate_count_floor": {"minimum": 0, "type": "integer"},
+    "aggregates": {
+      "additionalProperties": {"minimum": 0, "type": "integer"},
+      "type": "object"
+    },
+    "exported": {"type": "boolean"},
+    "reason": {"minLength": 1, "type": "string"},
+    "schema_version": {"const": "heartwood.skill-output.v1"},
+    "skill_id": {"const": "heartwood.research.aggregate-export"},
+    "suppressed": {"type": "boolean"}
+  },
+  "required": [
+    "aggregate_count_floor",
+    "aggregates",
+    "exported",
+    "reason",
+    "schema_version",
+    "skill_id",
+    "suppressed"
+  ],
+  "type": "object"
+}

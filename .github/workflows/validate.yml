@@ -1,0 +1,64 @@
+#
+# This source file is part of the Heartwood open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Repository Validation
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  reuse:
+    name: REUSE Compliance
+    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.3
+  actionlint:
+    name: Lint GitHub Actions Workflows
+    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.3
+  markdown-links:
+    name: Check Markdown Links
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.3
+  yamllint:
+    name: Lint YAML
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v7
+      - name: Install yamllint
+        run: pip install yamllint==1.38.0
+      - name: Run yamllint
+        run: yamllint -c .yamllint.yml .
+  whitespace:
+    name: Check Whitespace
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check trailing whitespace
+        run: |
+          if git grep -nI '[[:blank:]]$' -- .; then
+            echo "Trailing whitespace found."
+            exit 1
+          fi

@@ -1,0 +1,101 @@
+#
+# This source file is part of the Heartwood open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Build Catalog Candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-candidate-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate and Build Catalog Candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Require the protected main branch
+        run: test "${GITHUB_REF}" = "refs/heads/main"
+      - name: Checkout reviewed revision
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Require the current main revision
+        run: |
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "${GITHUB_SHA}"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+      - name: Install the pinned Python toolchain
+        run: uv python install
+      - name: Install locked dependencies
+        run: uv sync --locked
+      - name: Validate and test the reviewed source
+        run: |
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test -z "$(git status --short)"
+          uv run heartwood-skill-catalog validate
+          uv run pytest
+      - name: Build final catalog targets twice
+        env:
+          REVISION: ${{ github.sha }}
+        run: |
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "${REVISION}"
+          test "$(git rev-parse HEAD)" = "${REVISION}"
+          test -z "$(git status --short)"
+          rm -rf dist/catalog dist/catalog-a dist/catalog-b
+          uv run heartwood-skill-catalog build --output dist/catalog-a --revision "${REVISION}"
+          uv run heartwood-skill-catalog build --output dist/catalog-b --revision "${REVISION}"
+          diff --recursive --brief dist/catalog-a dist/catalog-b
+          mv dist/catalog-a dist/catalog
+      - name: Stage catalog candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: heartwood-skill-catalog-staging-${{ github.sha }}
+          path: dist/catalog
+          if-no-files-found: error
+          retention-days: 1
+
+  attest:
+    name: Attest Catalog Candidate
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+    steps:
+      - name: Download validated catalog candidate
+        uses: actions/download-artifact@v8
+        with:
+          name: heartwood-skill-catalog-staging-${{ github.sha }}
+          path: dist/catalog
+      - name: Attest catalog candidate
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: dist/catalog/**
+      - name: Upload attested catalog candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: heartwood-skill-catalog-${{ github.sha }}
+          path: dist/catalog
+          if-no-files-found: error
+          retention-days: 30

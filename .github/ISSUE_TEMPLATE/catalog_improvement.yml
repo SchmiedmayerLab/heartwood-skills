@@ -1,0 +1,51 @@
+#
+# This source file is part of the Heartwood open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Catalog Improvement
+description: Propose a change to catalog validation, packaging, or repository automation.
+title: ""
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the repository, validation, or catalog-generation problem to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Change
+      description: Describe the contract and expected outcome without prescribing unnecessary implementation detail.
+    validations:
+      required: true
+  - type: textarea
+    id: reuse
+    attributes:
+      label: Existing Standards or Dependencies
+      description: >-
+        Identify Agent Skills, OpenHands, TUF, GitHub, or another maintained dependency
+        that should own the behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: List observable security, compatibility, and test outcomes.
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/SchmiedmayerLab/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/SchmiedmayerLab/heartwood-skills/blob/main/CONTRIBUTING.md).  # yamllint disable-line rule:line-length
+      options:
+        - label: I agree to follow the Code of Conduct and Contributing Guidelines.
+          required: true
