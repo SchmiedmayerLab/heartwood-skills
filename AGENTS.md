@@ -1,6 +1,6 @@
 <!--
 
-This source file is part of the Heartwood open-source project
+This source file is part of the Heartwood Skills open-source project
 
 SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 
@@ -20,7 +20,7 @@ Heartwood owns acquisition, installation, runtime policy, interface behavior, an
 | Need | Source |
 |---|---|
 | Repository summary | [README.md](README.md) |
-| Local contribution workflow | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Contribution workflow | [CONTRIBUTING.md](https://github.com/SchmiedmayerLab/.github/blob/main/CONTRIBUTING.md) |
 | User-facing Skill workflow | [Heartwood Research Skills](https://schmiedmayerlab.github.io/heartwood/preview/use/skills/) |
 | Skill trust, publication, and revocation | [Heartwood Skill Trust and Distribution](https://schmiedmayerlab.github.io/heartwood/preview/architecture/skills/) |
 | Heartwood development boundaries | [Heartwood Development Guide](https://schmiedmayerlab.github.io/heartwood/preview/contribute/development/) |
