@@ -89,7 +89,7 @@ jobs:
           name: heartwood-skill-catalog-staging-${{ github.sha }}
           path: dist/catalog
       - name: Attest catalog candidate
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/catalog/**
       - name: Upload attested catalog candidate
