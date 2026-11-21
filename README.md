@@ -34,6 +34,7 @@ See [Contribute Research Skills](https://schmiedmayerlab.github.io/heartwood/pre
 | `aggregate-export` | Apply a participant-count floor before producing aggregate output. |
 | `baseline-model` | Produce a deterministic baseline with explicit evaluation limitations. |
 | `omop-cohort-summary` | Define and inspect a bounded OMOP-like cohort using aggregate checks. |
+| `workload-prediction` | Estimate resource use and revise predictions using observed project workloads. |
 
 The checked-in fixtures are synthetic.
 Repository review does not constitute institutional approval for controlled data.
