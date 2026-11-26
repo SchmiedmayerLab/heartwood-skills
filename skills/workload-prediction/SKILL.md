@@ -20,6 +20,12 @@ metadata:
 
 # Workload prediction
 
+Call `planning_overview` first, before relying on a budget or an estimate.
+It reports budgets and estimates each as available, not-offered, unavailable or refused, and gives the project_context_id a prediction uses.
+Without that tool, tell the researcher plainly that no platform estimate or budget is available here.
+When the overview reports budgets or estimates as anything but available, say plainly which one is missing and its status.
+Never invent, assume or compute a price, budget or balance.
+
 Ask the researcher for the input size, authorized runtime profile and stopping condition.
 Use aggregate measurements from the current project.
 For exploration, bound session duration and resources.
@@ -28,14 +34,14 @@ For inference, identify the model and route, request count and expected input an
 Give units, ranges where supported and the assumptions behind each quantity.
 Leave missing measurements unknown.
 
-Prepare a workload prediction for the existing research plan.
+Prepare a workload prediction for the existing research plan, and record it with `record_plan_prediction` when that tool is available.
 Give each evidence item an ID and cite it from the elements it supports.
 For example, a ten-task sample taking 20 seconds per task supports a duration assumption on the sampled profile.
 A different profile requires a new assumption or measurement.
 Record the project-relative sample report or its experiment run ID.
 A proposed benchmark needs normal action review and platform authorization before execution.
 
-Request a platform estimate for the recorded revision and compare coverage, validity and exclusions.
+When the overview reports estimates as available, request one for the recorded revision with `request_plan_estimate` and compare coverage, validity and exclusions.
 After a run, compare observed quantities with the assumptions in the same units.
 Check changes to rates, coverage and runtime profile separately before attributing a difference to prediction error.
 Record researcher corrections in a new revision, naming the previous prediction and linking the observed run.
