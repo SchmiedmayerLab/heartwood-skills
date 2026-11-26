@@ -15,13 +15,14 @@ metadata:
   heartwood.phi-risk: "none"
   heartwood.requires-network: "false"
   heartwood.controlled-data: "not-approved"
-  heartwood.approval-summary: "Uses project-local aggregate workload measurements and researcher assumptions to prepare a prediction."
+  heartwood.approval-summary: "Uses project-local aggregate workload measurements and researcher assumptions to prepare a prediction, and records it and requests platform estimates only through gateway tools the researcher reviews."
 ---
 
 # Workload prediction
 
 Call `planning_overview` first, before relying on a budget or an estimate.
-It reports budgets and estimates each as available, not-offered, unavailable or refused, and gives the project_context_id a prediction uses.
+It reports budgets and estimates each as available, not-offered, unavailable or refused, or unchecked before the first discovery.
+It also gives the project_context_id of this launch context; a prediction's project_context_id must equal it.
 Without that tool, tell the researcher plainly that no platform estimate or budget is available here.
 When the overview reports budgets or estimates as anything but available, say plainly which one is missing and its status.
 Never invent, assume or compute a price, budget or balance.
@@ -47,6 +48,7 @@ Check changes to rates, coverage and runtime profile separately before attributi
 Record researcher corrections in a new revision, naming the previous prediction and linking the observed run.
 For example, cite prediction:cohort-prediction@1 and experiment-run:00000000-0000-4000-8000-000000000001 after verifying both records in the project.
 For a platform execution, copy the observation:SHA256 reference for the relevant operation, status and observation time from the planning overview.
-An operation can have several status reports. Cite the one that supports the correction.
+An operation can have several status reports.
+Cite the one that supports the correction.
 Reuse measurements only through explicitly selected project evidence.
 Recording a revision does not train a model, reserve funds or authorize execution.
