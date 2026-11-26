@@ -126,7 +126,12 @@ def _entry_for_archive(entry: CatalogEntry, archive: Path) -> CatalogEntry:
 def test_all_curated_skills_load_through_openhands_with_complete_resources() -> None:
     inspected = {path.name: inspect_skill(path) for path in sorted(_SKILLS.iterdir())}
 
-    assert set(inspected) == {"aggregate-export", "baseline-model", "omop-cohort-summary"}
+    assert set(inspected) == {
+        "aggregate-export",
+        "baseline-model",
+        "omop-cohort-summary",
+        "workload-prediction",
+    }
     assert inspected["aggregate-export"].policy.entrypoint == "scripts/run.py"
     assert {item.role for item in inspected["aggregate-export"].files} == {
         "asset",
@@ -135,7 +140,12 @@ def test_all_curated_skills_load_through_openhands_with_complete_resources() -> 
     }
     assert "reference" in {item.role for item in inspected["baseline-model"].files}
     assert all(item.sha256 != "0" * 64 for skill in inspected.values() for item in skill.files)
-    assert all(skill.allowed_tools == ("terminal",) for skill in inspected.values())
+    assert inspected["workload-prediction"].allowed_tools == ()
+    assert all(
+        skill.allowed_tools == ("terminal",)
+        for skill in inspected.values()
+        if skill.policy.entrypoint
+    )
     assert all(skill.policy.controlled_data == "not-approved" for skill in inspected.values())
     assert inspected["aggregate-export"].policy.phi_risk == "none"
     assert inspected["baseline-model"].policy.phi_risk == "reads-phi"
@@ -743,7 +753,7 @@ def test_cli_validates_and_builds_catalog(
         )
         == 0
     )
-    assert "Built 3 Skill targets" in capsys.readouterr().out
+    assert "Built 4 Skill targets" in capsys.readouterr().out
 
 
 def test_empty_skill_root_is_rejected(tmp_path: Path) -> None:
